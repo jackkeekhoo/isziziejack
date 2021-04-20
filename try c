@@ -1,0 +1,71 @@
+import serial
+import codecs
+from sys import argv
+from os.path import exists
+import time
+
+testcomport=['COM1','COM2','COM3','COM4','COM5','COM6']
+
+class SensorWeight:
+    baudrate=9600
+    comport=''
+    serialport=''
+    portisgood=0
+    value_ave_final=0
+    value_ave_sum=0
+    value_ave_count=0
+    averageresultof=10
+    returnvalue="" #get from function readserial()
+    millislastread=time.process_time_ns()
+    connect_portinterger=1
+    def readserial():
+        value=''
+        #
+        #
+        print("value is ...")
+        return value
+    def loop(self):
+        if self.serialport=='':
+            connect()
+    def connect(self):
+        print("trying to connect to")
+        print(testcomport[self.connect_portinterger])
+        self.connect_portinterger+=1
+
+Heavy=SensorWeight()
+Heavy.connect()
+        
+sassa
+    
+mainloop=1
+while mainloop==1:
+    if SensorWeight.serialport=='':
+        try:
+            ser=serial.Serial('COM8', 57600)    
+        except :
+            print("Warning","cannot open")
+
+
+ser=serial.Serial('COM8', 57600)
+print(ser.name)
+
+
+ser2=serial.Serial('COM9', 9600)
+print(ser2.name)
+
+
+
+
+while True:
+    s = ser.readline()
+    print(codecs.encode(s, 'hex'))
+    s = ser2.readline()
+    print(s)
+    #hex_string=s[2:]
+    #hex_string.decode("utf-8")
+    #b_obj=bytes.fromhex(hex_string)
+    #ascii_string=bytes_object.decode("ASCII")
+    #print(ascii_string)
+
+ser.close()
+ser2.close() 
