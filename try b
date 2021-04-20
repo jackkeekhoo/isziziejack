@@ -1,0 +1,15 @@
+import serial
+import codecs
+from sys import argv
+from os.path import exists
+
+ser=serial.Serial('COM8', 57600)
+print(ser.name)
+ser2=serial.Serial('COM9', 9600)
+print(ser2.name)
+
+while True:
+    s = ser.read(10)
+    print(codecs.encode(s, 'hex'))
+    s = ser2.read(10)
+    print(s)
