@@ -5,6 +5,8 @@ from sys import argv
 from os.path import exists
 import time
 from statistics import mean
+import re
+
 
 testcomport=['COM1','COM2','COM3','COM4','COM5','COM6','COM7','COM8','COM9','COM10']
 
@@ -35,7 +37,8 @@ class SensorWeight:
     value_ave_count=0
     averageresultof=20
     value_ave_array = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
-    
+
+    returnvalue_commonlen=16
     returnvalue="" #get from function readserial()
     millislastread=time.process_time_ns()
     connect_portinterger=0
@@ -51,11 +54,11 @@ class SensorWeight:
         countmean = mean(self.value_ave_array)
         print("Mean is" + str(countmean))
         return countmean
-    def readserial():
-        value=serialport.readline()
-        print("value is ...")
-        print(value)
-        return value
+    def readserial(self):
+        value=self.serialport.readline()
+        self.processresult()
+        #print("value is ..."+ str(value))
+        #return value
     def loop(self):
         if self.serialport=='':
             self.connect()
@@ -76,18 +79,31 @@ class SensorWeight:
             if self.connect_portinterger>= self.connect_portinterger_max:
                 self.connect_portinterger=0
                 time.sleep(1)
-
-
-    #1) do a function to print all result from array
     def printarray(self):
-        #value_ave_array
-        #
+        print(self.value_ave_array)
         return()
+    def processresult(self):
+        sensorresult= "b'+    400  g\r\n'"
+        filteredresult = int(re.search(r'\d+', sensorresult).group())
+        print(filteredresult)
 
+        #length of sensor result
+        lengthofresult = len(sensorresult)
+        print("length of result is")
+        print(len(sensorresult))
 
+        if lengthofresult != self.returnvalue_commonlen:
+            return -1
+        return(filteredresult)
+        
 
+#testing            
 snowscale=SensorWeight()
-snowscale.countaverage()
+snowscale.loop()
+
+
+
+
 
 #/////-----   setup
 snowscale=SensorWeight()
@@ -107,7 +123,6 @@ wyuanrfid.close()
 ###
 #need to identify the sensor, is it weight or rfid
 #for rfid, use 2 dimension array to store factory ID,tag ID
-
 
 
     
