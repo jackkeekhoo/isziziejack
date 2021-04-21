@@ -100,11 +100,11 @@ class SensorRFID:
     averageresultof=20
     value_ave_array = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
 
-    returnvalue_commonlen=13
+    returnvalue_commonlen=36
     returnvalue="" #get from function readserial()
     millislastread=time.process_time_ns()
     connect_portinterger=0
-    connect_portinterger_max=36
+    connect_portinterger_max=10
     def countaverage(self):
         if len(self.value_ave_array) == 0:
             avg=0
@@ -133,13 +133,13 @@ class SensorRFID:
         #self.value_ave_array.insert(0,self.returnvalue) # add new result to index 0
         #self.value_ave_array.pop(self.averageresultof)#pop the old last index
         print(self.returnvalue)
+        time.sleep(1)
     def connect(self):
         print("trying to connect to")
         print(testcomport[self.connect_portinterger])
         try:
             self.serialport=serial.Serial(testcomport[self.connect_portinterger],9600)
             print("using"+self.serialport.name)
-            
             return (1)
         except :
             print("Warning","cannot open")
