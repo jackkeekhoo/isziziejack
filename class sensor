@@ -118,11 +118,12 @@ class SensorRFID:
         return countmean
     def readserial(self):
         waiting=self.serialport.inWaiting()
-        print("in waiting="+waiting)
+        print("in waiting="+str(waiting))
         value=self.serialport.read(waiting)
+        value=codecs.encode(value, 'hex')
         print(value)
         #newvalue=self.processresult(value)
-        print("value is ..."+ str(newvalue)+"g")
+        #print("value is ..."+ str(newvalue)+"g")
         #return value
     def loop(self):
         if self.serialport=='':
