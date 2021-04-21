@@ -39,10 +39,8 @@ class SensorWeight:
         print("Mean is" + str(countmean))
         return countmean
     def readserial(self):
-        
         value=self.serialport.readline()
-        
-        #newvalue=self.processresult(value)
+        newvalue=self.processresult(value)
         #print("value is ..."+ str(newvalue)+"g")
         #return value
     def loop(self):
@@ -117,11 +115,14 @@ class SensorRFID:
         print("Mean is" + str(countmean))
         return countmean
     def readserial(self):
-        waiting=self.serialport.inWaiting()
-        print("in waiting="+str(waiting))
-        value=self.serialport.read(waiting)
+        #self.serialport.timeout=0.5
+        #waiting=self.serialport.inWaiting()
+        #print("in waiting="+str(waiting))
+        value=self.serialport.read(36)
+        #print(codecs.encode(value, 'hex'))
         value=codecs.encode(value, 'hex')
-        print(value)
+        newvalue=self.processresult(value)
+        print(newvalue)
         #newvalue=self.processresult(value)
         #print("value is ..."+ str(newvalue)+"g")
         #return value
@@ -138,7 +139,7 @@ class SensorRFID:
         print("trying to connect to")
         print(testcomport[self.connect_portinterger])
         try:
-            self.serialport=serial.Serial(testcomport[self.connect_portinterger],9600)
+            self.serialport=serial.Serial(testcomport[self.connect_portinterger],57600)
             print("using"+self.serialport.name)
             return (1)
         except :
@@ -151,7 +152,7 @@ class SensorRFID:
         print(self.value_ave_array)
         return()
     def processresult(self,sensorresult):
-        sensorresult="1100EE00E20043B0CB852489ECCA5CB8FBEF"
+        #sensorresult="1100EE00E20043B0CB852489ECCA5CB8FBEF"
         split_strings = []
         n  = 22
         for index in range(0, len(sensorresult), n):
