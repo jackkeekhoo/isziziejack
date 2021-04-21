@@ -57,7 +57,6 @@ class SensorWeight:
         try:
             self.serialport=serial.Serial(testcomport[self.connect_portinterger],9600)
             print("using"+self.serialport.name)
-            
             return (1)
         except :
             print("Warning","cannot open")
@@ -97,7 +96,8 @@ class SensorRFID:
     value_ave_count=0
     averageresultof=20
     value_ave_array = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
-
+    value_array=[]
+    
     returnvalue_commonlen=36
     returnvalue="" #get from function readserial()
     millislastread=time.process_time_ns()
@@ -115,11 +115,9 @@ class SensorRFID:
         print("Mean is" + str(countmean))
         return countmean
     def readserial(self):
-        #self.serialport.timeout=0.5
         #waiting=self.serialport.inWaiting()
         #print("in waiting="+str(waiting))
         value=self.serialport.read(36)
-        #print(codecs.encode(value, 'hex'))
         value=codecs.encode(value, 'hex')
         newvalue=self.processresult(value)
         print(newvalue)
@@ -141,6 +139,7 @@ class SensorRFID:
         try:
             self.serialport=serial.Serial(testcomport[self.connect_portinterger],57600)
             print("using"+self.serialport.name)
+            self.serialport.timeout=0.5
             return (1)
         except :
             print("Warning","cannot open")
@@ -153,23 +152,21 @@ class SensorRFID:
         return()
     def processresult(self,sensorresult):
         #sensorresult="1100EE00E20043B0CB852489ECCA5CB8FBEF"
-        split_strings = []
-        n  = 22
-        for index in range(0, len(sensorresult), n):
-            split_strings.append(sensorresult[index : index + n])
-        print("  manufacturing id:        tag id:")
-        print(split_strings)
-        
-        #length of sensor result
-        lengthofresult = len(sensorresult)
-        print("length of result is")
         print(len(sensorresult))
-
-        if lengthofresult != self.returnvalue_commonlen:
+        if len(sensorresult) != self.returnvalue_commonlen:
             return -1
-        return(filteredresult)
+        #n  = 22
+        #for index in range(0, len(sensorresult), n):
+        #    self.value_array.append(sensorresult[index : index + n])
+        self.value_array.append([sensorresult[:22] , sensorresult[22:]])
+        #print("  manufacturing id:        tag id:")
+        #print(self.value_array)
+        
         
     
+
+
+
     
 
         
@@ -195,14 +192,10 @@ snowscale.close()
 wyuanrfid.close()
 
 
-#todo:
-    #get the result from RFID sensor
-    #seperate the result to factory ID,tag ID
-    #store it in 2 dimension array
+
 
 ###
 #need to identify the sensor, is it weight or rfid
-#for rfid, use 2 dimension array to store factory ID,tag ID
 
 
     
