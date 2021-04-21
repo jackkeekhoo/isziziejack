@@ -69,7 +69,8 @@ class SensorWeight:
         return()
     def processresult(self,sensorresult):
         x= sensorresult.decode()
-        
+        if self.CheckIsThisSnowScale(x)==0
+            self.serialport.close()
         print(x)
         filteredresult = int(re.search(r'\d+', x).group())
         print(filteredresult)
@@ -83,6 +84,14 @@ class SensorWeight:
             return -1
         return(filteredresult)
 
+    def CheckIsThisSnowScale(rawstr):
+        #if the rawstr contain character "g", then return 1 else return 0
+        #sensorresult="1100EE00E20043B0CB852489ECCA5CB8FBEF"
+        x = re.findall("[g]",rawstr)
+        if x:
+            return 1
+        else:
+            return 0
 
 
 class SensorRFID:
@@ -152,6 +161,8 @@ class SensorRFID:
         return()
     def processresult(self,sensorresult):
         #sensorresult="1100EE00E20043B0CB852489ECCA5CB8FBEF"
+        if self.CheckIsThisSnowScale(x)==0
+            self.serialport.close()
         print(len(sensorresult))
         if len(sensorresult) != self.returnvalue_commonlen:
             return -1
@@ -161,7 +172,14 @@ class SensorRFID:
         self.value_array.append([sensorresult[:22] , sensorresult[22:]])
         #print("  manufacturing id:        tag id:")
         #print(self.value_array)
-        
+    def CheckIsThisSnowScale(rawstr):
+        #if the rawstr contain character "g", then return 1 else return 0
+        #sensorresult="1100EE00E20043B0CB852489ECCA5CB8FBEF"
+        x = re.findall("[g]",rawstr)
+        if x:
+            return 1
+        else:
+            return 0
         
     
 
