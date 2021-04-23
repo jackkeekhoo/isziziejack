@@ -1,3 +1,6 @@
+#23apr2021
+#3:44pm
+
 
 import serial
 import codecs
@@ -24,8 +27,8 @@ class SensorWeight:
     value_ave_array = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
 
     returnvalue_commonlen=13
-    returnvalue="" #get from function readserial()
-    millislastread=time.process_time_ns()
+    returnvalue="0" #get from function readserial()
+    millislastread=0
     connect_portinterger=0
     connect_portinterger_max=10
     def countaverage(self):
@@ -44,7 +47,7 @@ class SensorWeight:
         self.serialport.reset_input_buffer()
         newvalue=self.processresult(value)
         #print("value is ..."+ str(newvalue)+"g")
-        #return value
+        return newvalue
     def loop(self):
         if self.serialport=='':
             if self.connect() !=1:
@@ -53,7 +56,7 @@ class SensorWeight:
         #self.value_ave_array.insert(0,self.returnvalue) # add new result to index 0
         #self.value_ave_array.pop(self.averageresultof)#pop the old last index
         #print(self.returnvalue)
-        time.sleep(0.1)
+        #time.sleep(0.1)
     def connect(self):
         print("trying to connect to")
         print(testcomport[self.connect_portinterger])
@@ -71,6 +74,7 @@ class SensorWeight:
         print(self.value_ave_array)
         return()
     def processresult(self,sensorresult):
+        #print(sensorresult)
         x= sensorresult.decode()
         if re.findall("[g]",str(sensorresult))==0:
             print("wrong port,close now")
@@ -80,12 +84,10 @@ class SensorWeight:
         filteredresult = int(re.search(r'\d+', x).group())
         #if filteredresult != 0:
             #print(filteredresult)
-
         #length of sensor result
         lengthofresult = len(sensorresult)
         #print("length of result is")
         #print(len(sensorresult))
-
         if lengthofresult != self.returnvalue_commonlen:
             return -1
         return(filteredresult)
@@ -98,6 +100,8 @@ class SensorWeight:
             return 1
         else:
             return 0
+    def current_milli_time():
+        return round(time.time() * 1000)
 
 
 class SensorRFID:
@@ -115,7 +119,9 @@ class SensorRFID:
     
     returnvalue_commonlen=72
     returnvalue="" #get from function readserial()
-    millislastread=time.process_time_ns()
+    returnvalue_serial=""
+    returnvalue_facory=""
+    millislastread=0
     connect_portinterger=0
     connect_portinterger_max=10
     def countaverage(self):
@@ -136,21 +142,23 @@ class SensorRFID:
         self.serialport.reset_input_buffer()
         value=codecs.encode(value, 'hex')
         newvalue=self.processresult(value)
-        millislastread=time.process_time_ns()
+        millislastread=current_milli_time()
         #print(newvalue)
         #newvalue=self.processresult(value)
         #print("value is ..."+ str(newvalue)+"g")
-        #return value
+        return newvalue
     def loop(self):
+        if current_milli_time()-self.millislastread>2000:
+            self.returnvalue=""
         if self.serialport=='':
             if self.connect() !=1:
                 return()
         self.returnvalue=self.readserial()
         #self.value_ave_array.insert(0,self.returnvalue) # add new result to index 0
         #self.value_ave_array.pop(self.averageresultof)#pop the old last index
-        if self.returnvalue!= -1:
-            print(self.returnvalue)
-        time.sleep(0.1)
+        #if self.returnvalue!= -1:
+            #print(self.returnvalue)
+        #time.sleep(0.1)
     def connect(self):
         print("trying to connect to")
         print(testcomport[self.connect_portinterger])
@@ -171,7 +179,7 @@ class SensorRFID:
     def processresult(self,sensorresult):
         #sensorresult="1100EE00E20043B0CB852489ECCA5CB8FBEF"
         if re.findall("[g]",str(sensorresult))==1:
-            #print("close now")
+            print("From rfid , connect wrong, close now")
             self.serialport.close()
             self.serialport=''
         #print(len(sensorresult))
@@ -180,15 +188,26 @@ class SensorRFID:
         #n  = 22
         #for index in range(0, len(sensorresult), n):
         #    self.value_array.append(sensorresult[index : index + n])
-        self.value_array.append([sensorresult[:22] , sensorresult[22:36]])
+        #self.value_array.append([sensorresult[:22] , sensorresult[22:36]])
+        self.returnvalue_factory=sensorresult[:22]
+        self.returnvalue_serial=[sensorresult[22:36]
         #print("  manufacturing id:        tag id:")
         #print(self.value_array)
-        
+        return self.convert_b_to_str(sensorresult)
+    
+    def convert_b_to_str(self, sensorresult):
+        #sensorresult=b'1100EE00E20043B0CB852489ECCA5CB8FBEF'
+        newstring = sensorresult.decode()
+        return newstring
+    def current_milli_time():
+        return round(time.time() * 1000)
+
     
 
-
+#todo
 #iszizie,  do a function to close the serial port for sensor class, I think is "close()"  https://pyserial.readthedocs.io/en/latest/pyserial_api.html
-
+#the auto scan comport for 2 sensor simultanuesly still didn't work
+#the weight sensor need to return average value, not the latest reading
 
 
 
@@ -199,16 +218,18 @@ class SensorRFID:
 snowscale=SensorWeight()
 wyuanrfid=SensorRFID()
 snowscale=SensorWeight()
-wyuanrfid.serialport=serial.Serial('COM8',57600)
-snowscale.serialport=serial.Serial('COM9',9600)
+wyuanrfid.serialport=serial.Serial('COM3',57600)
+snowscale.serialport=serial.Serial('COM5',9600)
 mainloop=1
 while mainloop==1:
-    scowscale.loop()
-    if scowscale.returnvalue >=0:
-        wyuanrfid.loop()
-        if scowscale.returnvalue !='':
-            print("weight now is " +scowscale.returnvalue + " and rfid tag is "+wyuanrfid.returnvalue)
-        
+    snowscale.loop()
+    if snowscale.returnvalue is not None:
+        if int(snowscale.returnvalue) >0:
+            wyuanrfid.loop()
+            if wyuanrfid.returnvalue !='':
+                print("weight now is " +str(snowscale.returnvalue) + " and rfid factory is "+str(wyuanrfid.returnvalue_factory)+",card serial ="+str(wyuanrfid.returnvalue_serial))
+                #record to 2d array
+
 
 
 #/////-----   setup
@@ -226,9 +247,6 @@ while mainloop==1:
 
 
 
-
-###
-#need to identify the sensor, is it weight or rfid
 
 
     
