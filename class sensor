@@ -33,11 +33,11 @@ class SensorWeight:
             avg=0
         else:
             avg = sum(self.value_ave_array) / len(self.value_ave_array) 
-        print("Average is "+ str(avg))
+        #print("Average is "+ str(avg))
         return avg
     def countmean(self):
         countmean = mean(self.value_ave_array)
-        print("Mean is" + str(countmean))
+        #print("Mean is" + str(countmean))
         return countmean
     def readserial(self):
         value=self.serialport.readline()
@@ -73,13 +73,13 @@ class SensorWeight:
     def processresult(self,sensorresult):
         x= sensorresult.decode()
         if re.findall("[g]",str(sensorresult))==0:
-            print("close now")
+            print("wrong port,close now")
             self.serialport.close()
             self.serialport=''
         #print(x)
         filteredresult = int(re.search(r'\d+', x).group())
-        if filteredresult != 0:
-            print(filteredresult)
+        #if filteredresult != 0:
+            #print(filteredresult)
 
         #length of sensor result
         lengthofresult = len(sensorresult)
@@ -123,11 +123,11 @@ class SensorRFID:
             avg=0
         else:
             avg = sum(self.value_ave_array) / len(self.value_ave_array) 
-        print("Average is "+ str(avg))
+        #print("Average is "+ str(avg))
         return avg
     def countmean(self):
         countmean = mean(self.value_ave_array)
-        print("Mean is" + str(countmean))
+        #print("Mean is" + str(countmean))
         return countmean
     def readserial(self):
         if self.serialport.inWaiting()<36:
@@ -136,7 +136,8 @@ class SensorRFID:
         self.serialport.reset_input_buffer()
         value=codecs.encode(value, 'hex')
         newvalue=self.processresult(value)
-        print(newvalue)
+        millislastread=time.process_time_ns()
+        #print(newvalue)
         #newvalue=self.processresult(value)
         #print("value is ..."+ str(newvalue)+"g")
         #return value
@@ -170,41 +171,49 @@ class SensorRFID:
     def processresult(self,sensorresult):
         #sensorresult="1100EE00E20043B0CB852489ECCA5CB8FBEF"
         if re.findall("[g]",str(sensorresult))==1:
-            print("close now")
+            #print("close now")
             self.serialport.close()
             self.serialport=''
-        print(len(sensorresult))
+        #print(len(sensorresult))
         if len(sensorresult) != self.returnvalue_commonlen:
             return -1
         #n  = 22
         #for index in range(0, len(sensorresult), n):
         #    self.value_array.append(sensorresult[index : index + n])
         self.value_array.append([sensorresult[:22] , sensorresult[22:36]])
-        print("  manufacturing id:        tag id:")
-        print(self.value_array)
+        #print("  manufacturing id:        tag id:")
+        #print(self.value_array)
         
     
 
 
+#iszizie,  do a function to close the serial port for sensor class, I think is "close()"  https://pyserial.readthedocs.io/en/latest/pyserial_api.html
 
-    
+
+
+
+
 
         
 #testing
-
+snowscale=SensorWeight()
 wyuanrfid=SensorRFID()
 snowscale=SensorWeight()
 wyuanrfid.serialport=serial.Serial('COM8',57600)
 snowscale.serialport=serial.Serial('COM9',9600)
 mainloop=1
 while mainloop==1:
-    wyuanrfid.loop()
-    snowscale.loop()
+    scowscale.loop()
+    if scowscale.returnvalue >=0:
+        wyuanrfid.loop()
+        if scowscale.returnvalue !='':
+            print("weight now is " +scowscale.returnvalue + " and rfid tag is "+wyuanrfid.returnvalue)
+        
 
 
 #/////-----   setup
-snowscale=SensorWeight()
-mainloop=1
+#snowscale=SensorWeight()
+#mainloop=1
 
 #/////-----   loop    
 #while mainloop==1:
