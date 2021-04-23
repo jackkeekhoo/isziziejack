@@ -1,5 +1,5 @@
 #23apr2021
-#3:44pm
+#4.35 pm
 
 
 import serial
@@ -120,7 +120,7 @@ class SensorRFID:
     returnvalue_commonlen=72
     returnvalue="" #get from function readserial()
     returnvalue_serial=""
-    returnvalue_facory=""
+    returnvalue_factory=""
     millislastread=0
     connect_portinterger=0
     connect_portinterger_max=10
@@ -142,14 +142,12 @@ class SensorRFID:
         self.serialport.reset_input_buffer()
         value=codecs.encode(value, 'hex')
         newvalue=self.processresult(value)
-        millislastread=current_milli_time()
+        self.millislastread=self.current_milli_time()
         #print(newvalue)
         #newvalue=self.processresult(value)
         #print("value is ..."+ str(newvalue)+"g")
         return newvalue
     def loop(self):
-        if current_milli_time()-self.millislastread>2000:
-            self.returnvalue=""
         if self.serialport=='':
             if self.connect() !=1:
                 return()
@@ -189,8 +187,8 @@ class SensorRFID:
         #for index in range(0, len(sensorresult), n):
         #    self.value_array.append(sensorresult[index : index + n])
         #self.value_array.append([sensorresult[:22] , sensorresult[22:36]])
-        self.returnvalue_factory=sensorresult[:22]
-        self.returnvalue_serial=[sensorresult[22:36]
+        self.returnvalue_factory=self.convert_b_to_str(sensorresult[:22])
+        self.returnvalue_serial=self.convert_b_to_str(sensorresult[22:36])
         #print("  manufacturing id:        tag id:")
         #print(self.value_array)
         return self.convert_b_to_str(sensorresult)
@@ -199,8 +197,19 @@ class SensorRFID:
         #sensorresult=b'1100EE00E20043B0CB852489ECCA5CB8FBEF'
         newstring = sensorresult.decode()
         return newstring
-    def current_milli_time():
+    def current_milli_time(self):
         return round(time.time() * 1000)
+    def clearbuffer(self):
+        if wyuanrfid.millislastread!=0:
+            if int(self.current_milli_time())-int(self.millislastread) >2000:
+                print("clear")
+                self.serialport.reset_input_buffer()
+                self.returnvalue=""
+                self.returnvalue_factory=""
+                self.returnvalue_serial=""
+                wyuanrfid.millislastread=0
+
+        
 
     
 
@@ -223,6 +232,7 @@ snowscale.serialport=serial.Serial('COM5',9600)
 mainloop=1
 while mainloop==1:
     snowscale.loop()
+    wyuanrfid.clearbuffer()
     if snowscale.returnvalue is not None:
         if int(snowscale.returnvalue) >0:
             wyuanrfid.loop()
@@ -244,9 +254,3 @@ while mainloop==1:
 #/////-----   closing
 #snowscale.close()
 #wyuanrfid.close()
-
-
-
-
-
-    
