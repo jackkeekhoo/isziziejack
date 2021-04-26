@@ -1,5 +1,5 @@
 #26apr2021
-#9.38 am
+#10.03 am
 
 
 import serial
@@ -7,7 +7,7 @@ import codecs
 from sys import argv
 from os.path import exists
 import time
-from statistics import mean
+from statistics import mean,mode
 import re
 
 
@@ -42,6 +42,10 @@ class SensorWeight:
         countmean = mean(self.value_ave_array)
         #print("Mean is" + str(countmean))
         return countmean
+    def countmode(self):
+        countmode = mode(self.value_ave_array)
+        #print("Mode is" + str(countmode))
+        return countmode
     def readserial(self):
         value=self.serialport.readline()
         self.serialport.reset_input_buffer()
@@ -100,7 +104,7 @@ class SensorWeight:
             return 1
         else:
             return 0
-    def current_milli_time():
+    def current_milli_time(self):
         return round(time.time() * 1000)
 
 
@@ -152,7 +156,8 @@ class SensorRFID:
             if self.connect() !=1:
                 return()
         self.returnvalue=self.readserial()
-        #self.value_ave_array.insert(0,self.returnvalue) # add new result to index 0
+        self.value_ave_array.insert(0,self.returnvalue) # add new result to index 0
+        self.value_ave_array.pop()#pop the old last index
         #self.value_ave_array.pop(self.averageresultof)#pop the old last index
         #if self.returnvalue!= -1:
             #print(self.returnvalue)
@@ -238,16 +243,18 @@ while mainloop==1:
     wyuanrfid.clearbuffer()
     if snowscale.returnvalue is not None:
         if int(snowscale.returnvalue) >0:
-            millislastread=self.current_milli_time()
+            snowscale.millislastread=snowscale.current_milli_time()
             wyuanrfid.loop()
             if wyuanrfid.returnvalue !='':
                 #print("weight now is " +str(snowscale.returnvalue) + " and rfid factory is "+str(wyuanrfid.returnvalue_factory)+",card serial ="+str(wyuanrfid.returnvalue_serial))
-                finalweight=snowscale.returnvalue
+                print("mode="+snowscale.countmode)
+                finalweight=snowscale.countmode
                 finalfactoryid=wyuanrfid.returnvalue_factory
                 finalserialid=wyuanrfid.returnvalue_serial
                 #record to 2d array
-    if int(self.current_milli_time())-int(self.millislastread) >2000:
+    if int(snowscale.current_milli_time())-int(snowscale.millislastread) >3000:
         print("weight now is " +str(finalweight) + " and rfid factory is "+str(finalfactoryid)+",card serial ="+str(finalserialid))
+        snowscale.millislastread=snowscale.current_milli_time()
         
 
 
