@@ -1,5 +1,5 @@
 #26April2021
-#10.36am
+#12.47pm
 
 import sys
 from PyQt5.Qt import *
@@ -13,11 +13,11 @@ from PyQt5 import QtCore, QtGui, QtNetwork
 
 from mongolink import *
 from comport_class_sensor import *
-#import requests
+import requests
 
 
 class livestock_data_desktop(QWidget):
-    wyuanrfid_latestid="1100EE00E20043B0CB852489ECCA5CB8FBEF"
+    wyuanrfid_latestid=""
     wyuanrfid_array=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
     snowscale_latestweight=400
     snowscale_array = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
@@ -31,7 +31,10 @@ class livestock_data_desktop(QWidget):
         self.snowscale=SensorWeight()
         self.wyuanrfid.serialport=serial.Serial('COM3',57600)
         self.snowscale.serialport=serial.Serial('COM5',9600)
-        self.mongodatabase=LivestockDb
+        self.mongodatabase=LivestockDb()
+        self.finalweight=0
+        self.finalfactoryid=0
+        self.finalserialid=0
     
     def initUI(self):
         rightlabel=QLabel("Weighting Scale",self)
@@ -72,32 +75,38 @@ class livestock_data_desktop(QWidget):
         self.move(qr.topLeft())
 
     def sensorloop(self):
-        finalweight=0
-        finalfactoryid=0
-        finalserialid=0
+        #finalweight=0
+        #finalfactoryid=0
+        #finalserialid=0
         #while mainloop==1:
         self.snowscale.loop()
-        self.time_id=0
-        self.time_id = self.startTimer(200)
-        self.wyuanrfid.clearbuffer()
+        #self.time_id=0
+        #self.time_id = self.startTimer(200)
+        try :
+            self.wyuanrfid.clearbuffer()
+        except:
+            k=0
         if self.snowscale.returnvalue is not None:
             if int(self.snowscale.returnvalue) >0:
                 self.snowscale.millislastread=self.snowscale.current_milli_time()
                 self.wyuanrfid.loop()
                 if self.wyuanrfid.returnvalue !='':
-                    finalweight=self.snowscale.countmode()
-                    finalfactoryid=self.wyuanrfid.returnvalue_factory
-                    finalserialid=self.wyuanrfid.returnvalue_serial
+                    self.finalweight=self.snowscale.countmode()
+                    self.finalfactoryid=self.wyuanrfid.returnvalue_factory
+                    self.finalserialid=self.wyuanrfid.returnvalue_serial
                     #record to 2d array
+                    
         if self.snowscale.millislastread != 0:
             if int(self.snowscale.current_milli_time())-int(self.snowscale.millislastread) >3000:
+                self.mongodatabase.insertvalue(str(self.finalfactoryid),str(self.finalserialid),str(self.finalweight))
                 #print("weight now is " +str(finalweight) + " and rfid factory is "+str(finalfactoryid)+",card serial ="+str(finalserialid))
-                self.wyuanrfid_latestid=self.wyuanrfid_latestid+"weight now is " +str(finalweight) + " and rfid factory is "+str(finalfactoryid)+",card serial ="+str(finalserialid)
+                requests.get("https://sf.redtone.com:2288/serverdata/central.php?thismodelname=rfid_livestock&thisdevicename=rfid_livestock&macaddress=isziziejack&weight="+str(self.finalweight)+"&factory="+str(self.finalfactoryid)+"&card="+str(self.finalserialid))
+                self.wyuanrfid_latestid=self.wyuanrfid_latestid+"\nweight now is " +str(self.finalweight) + " and rfid factory is "+str(self.finalfactoryid)+",card serial ="+str(self.finalserialid)
                 self.rightarrayEdit.setText(str(self.wyuanrfid_latestid))
                 self.snowscale.millislastread=0
-                finalweight=0
-                finalfactoryid=0
-                finalserialid=0
+                self.finalweight=0
+                self.finalfactoryid=0
+                self.finalserialid=0
 
                     
     def mystarttimer(self):
