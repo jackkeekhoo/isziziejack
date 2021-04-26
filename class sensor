@@ -1,279 +1,128 @@
-#26apr2021
-#10.39 am
+#26April2021
+#11.55am
+
+import sys
+from PyQt5.Qt import *
+#iszizie find icon and add icon , https://zetcode.com/gui/pyqt5/firstprograms/
+
+import sys
+from PyQt5.QtWidgets import QWidget, QDesktopWidget, QApplication
+#from PyQt5.QtCore import Qt, QBasicTimer, pyqtSignal
+from PyQt5 import QtCore, QtGui, QtNetwork
 
 
-import serial
-import codecs
-from sys import argv
-from os.path import exists
-import time
-from statistics import mean,mode
-import re
+from mongolink import *
+from comport_class_sensor import *
+import requests
 
 
-
-testcomport=['COM1','COM2','COM3','COM4','COM5','COM6','COM7','COM8','COM9','COM10']
-
-class SensorWeight:
-    baudrate=9600
-    comport=''
-    serialport=''
-    portisgood=0
+class livestock_data_desktop(QWidget):
+    wyuanrfid_latestid=""
+    wyuanrfid_array=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+    snowscale_latestweight=400
+    snowscale_array = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+    #global wyuanrfid
+    #global snowscale
     
-    value_ave_final=0
-    value_ave_sum=0
-    value_ave_count=0
-    averageresultof=20
-    value_ave_array = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
-
-    returnvalue_commonlen=13
-    returnvalue="0" #get from function readserial()
-    millislastread=0
-    connect_portinterger=0
-    connect_portinterger_max=10
-    def countaverage(self):
-        if len(self.value_ave_array) == 0:
-            avg=0
-        else:
-            avg = sum(self.value_ave_array) / len(self.value_ave_array) 
-        #print("Average is "+ str(avg))
-        return avg
-    def countmean(self):
-        countmean = mean(self.value_ave_array)
-        #print("Mean is" + str(countmean))
-        return countmean
-    def countmode(self):
-        countmode = mode(self.value_ave_array)
-        #print("Mode is" + str(countmode))
-        return countmode
-    def readserial(self):
-        value=self.serialport.readline()
-        self.serialport.reset_input_buffer()
-        newvalue=self.processresult(value)
-        #print("value is ..."+ str(newvalue)+"g")
-        return newvalue
-    def loop(self):
-        if self.serialport=='':
-            if self.connect() !=1:
-                return()
-        self.returnvalue=self.readserial()
-        self.value_ave_array.insert(0,self.returnvalue) # add new result to index 0
-        self.value_ave_array.pop()#pop the old last index
-        #print(self.returnvalue)
-        #time.sleep(0.1)
-    def connect(self):
-        print("trying to connect to")
-        print(testcomport[self.connect_portinterger])
-        try:
-            self.serialport=serial.Serial(testcomport[self.connect_portinterger],9600)
-            print("using"+self.serialport.name)
-            return (1)
-        except :
-            print("Warning","cannot open")
-            self.connect_portinterger+=1
-            if self.connect_portinterger>= self.connect_portinterger_max:
-                self.connect_portinterger=0
-                time.sleep(1)
-    def printarray(self):
-        print(self.value_ave_array)
-        return()
-    def processresult(self,sensorresult):
-        #print(sensorresult)
-        x= sensorresult.decode()
-        if re.findall("[g]",str(sensorresult))==0:
-            print("wrong port,close now")
-            self.serialport.close()
-            self.serialport=''
-        #print(x)
-        filteredresult = int(re.search(r'\d+', x).group())
-        #if filteredresult != 0:
-            #print(filteredresult)
-        #length of sensor result
-        lengthofresult = len(sensorresult)
-        #print("length of result is")
-        #print(len(sensorresult))
-        if lengthofresult != self.returnvalue_commonlen:
-            return -1
-        return(filteredresult)
-
-    def CheckIsThisSnowScale(rawstr):
-        #if the rawstr contain character "g", then return 1 else return 0
-        #sensorresult="1100EE00E20043B0CB852489ECCA5CB8FBEF"
-        x = re.findall("[g]",rawstr)
-        if x:
-            return 1
-        else:
-            return 0
-    def current_milli_time(self):
-        return round(time.time() * 1000)
-
-
-class SensorRFID:
-    baudrate=57600
-    comport=''
-    serialport=''
-    portisgood=0
+    def __init__(self):
+        super().__init__()        
+        self.initUI()
+        self.wyuanrfid=SensorRFID()
+        self.snowscale=SensorWeight()
+        self.wyuanrfid.serialport=serial.Serial('COM3',57600)
+        self.snowscale.serialport=serial.Serial('COM5',9600)
+        self.mongodatabase=LivestockDb()
+        self.finalweight=0
+        self.finalfactoryid=0
+        self.finalserialid=0
     
-    value_ave_final=0
-    value_ave_sum=0
-    value_ave_count=0
-    averageresultof=20
-    value_ave_array = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
-    value_array=[]
-    
-    returnvalue_commonlen=72
-    returnvalue="" #get from function readserial()
-    returnvalue_serial=""
-    returnvalue_factory=""
-    millislastread=0
-    connect_portinterger=0
-    connect_portinterger_max=10
-    def countaverage(self):
-        if len(self.value_ave_array) == 0:
-            avg=0
-        else:
-            avg = sum(self.value_ave_array) / len(self.value_ave_array) 
-        #print("Average is "+ str(avg))
-        return avg
-    def countmean(self):
-        countmean = mean(self.value_ave_array)
-        #print("Mean is" + str(countmean))
-        return countmean
-    def readserial(self):
-        if self.serialport.inWaiting()<36:
-            return -1
-        value=self.serialport.read(36)
-        self.serialport.reset_input_buffer()
-        value=codecs.encode(value, 'hex')
-        newvalue=self.processresult(value)
-        self.millislastread=self.current_milli_time()
-        #print(newvalue)
-        #newvalue=self.processresult(value)
-        #print("value is ..."+ str(newvalue)+"g")
-        return newvalue
-    def loop(self):
-        if self.serialport=='':
-            if self.connect() !=1:
-                return()
-        self.returnvalue=self.readserial()
-        #self.value_ave_array.insert(0,self.returnvalue) # add new result to index 0
-        #self.value_ave_array.pop()#pop the old last index
-        #self.value_ave_array.pop(self.averageresultof)#pop the old last index
-        #if self.returnvalue!= -1:
-            #print(self.returnvalue)
-        #time.sleep(0.1)
-    def connect(self):
-        print("trying to connect to")
-        print(testcomport[self.connect_portinterger])
-        try:
-            self.serialport=serial.Serial(testcomport[self.connect_portinterger],57600)
-            print("using"+self.serialport.name)
-            self.serialport.timeout=0.5
-            return (1)
-        except :
-            print("Warning","cannot open")
-            self.connect_portinterger+=1
-            if self.connect_portinterger>= self.connect_portinterger_max:
-                self.connect_portinterger=0
-                time.sleep(1)
-    def printarray(self):
-        print(self.value_ave_array)
-        return()
-    def processresult(self,sensorresult):
-        #sensorresult="1100EE00E20043B0CB852489ECCA5CB8FBEF"
-        if re.findall("[g]",str(sensorresult))==1:
-            print("From rfid , connect wrong, close now")
-            self.serialport.close()
-            self.serialport=''
-        #print(len(sensorresult))
-        if len(sensorresult) != self.returnvalue_commonlen:
-            return -1
-        #n  = 22
-        #for index in range(0, len(sensorresult), n):
-        #    self.value_array.append(sensorresult[index : index + n])
-        #self.value_array.append([sensorresult[:22] , sensorresult[22:36]])
-        self.returnvalue_factory=self.convert_b_to_str(sensorresult[:22])
-        self.returnvalue_serial=self.convert_b_to_str(sensorresult[22:36])
-        #print("  manufacturing id:        tag id:")
-        #print(self.value_array)
-        return self.convert_b_to_str(sensorresult)
-    
-    def convert_b_to_str(self, sensorresult):
-        #sensorresult=b'1100EE00E20043B0CB852489ECCA5CB8FBEF'
-        newstring = sensorresult.decode()
-        return newstring
-    def current_milli_time(self):
-        return round(time.time() * 1000)
-    def clearbuffer(self):
-        if wyuanrfid.millislastread!=0:
-            if int(self.current_milli_time())-int(self.millislastread) >2000:
-                print("clear")
-                self.serialport.reset_input_buffer()
-                self.returnvalue=""
-                self.returnvalue_factory=""
-                self.returnvalue_serial=""
-                wyuanrfid.millislastread=0
-
+    def initUI(self):
+        rightlabel=QLabel("Weighting Scale",self)
+        rightresult=QLabel(str(self.snowscale_latestweight),self)
+        rightarray=QLabel("previous 20")
+        self.rightarrayEdit = QTextEdit()
         
+        leftlabel=QLabel("RFID Reader",self)
+        leftresult=QLabel(self.wyuanrfid_latestid,self)
+        leftarray=QLabel("previous 20")
+        self.leftarrayEdit = QTextEdit()
 
-    
+        grid = QGridLayout()
+        grid.setSpacing(10)
+        grid.addWidget(rightlabel, 1, 1)#iszizit please change all these widget position
+        grid.addWidget(rightresult, 2, 1)
+        grid.addWidget(rightarray, 3, 1)
+        grid.addWidget(self.rightarrayEdit, 4, 1, 5, 1)
+        grid.addWidget(leftlabel, 1, 0)
+        grid.addWidget(leftresult, 2, 0)
+        grid.addWidget(leftarray, 3, 0)
+        grid.addWidget(self.leftarrayEdit, 4, 0, 5, 1)
 
-#todo
-#iszizie,  do a function to close the serial port for sensor class, I think is "close()"  https://pyserial.readthedocs.io/en/latest/pyserial_api.html
-#the auto scan comport for 2 sensor simultanuesly still didn't work
-#the weight sensor need to return average value, not the latest reading
-
-
-
-
-
+        self.setLayout(grid)
         
-#testing
-change_this_varible_to_1_for_testting=0
-if change_this_varible_to_1_for_testting==1:
-    snowscale=SensorWeight()
-    wyuanrfid=SensorRFID()
-    wyuanrfid.serialport=serial.Serial('COM3',57600)
-    snowscale.serialport=serial.Serial('COM5',9600)
-    mainloop=1
-    finalweight=0
-    finalfactoryid=0
-    finalserialid=0
-    while mainloop==1:
-        snowscale.loop()
-        wyuanrfid.clearbuffer()
-        if snowscale.returnvalue is not None:
-            if int(snowscale.returnvalue) >0:
-                snowscale.millislastread=snowscale.current_milli_time()
-                wyuanrfid.loop()
-                if wyuanrfid.returnvalue !='':
-                    #print("weight now is " +str(snowscale.returnvalue) + " and rfid factory is "+str(wyuanrfid.returnvalue_factory)+",card serial ="+str(wyuanrfid.returnvalue_serial))
-                    #print("mode="+str(snowscale.countmode))
-                    #print(snowscale.value_ave_array)
-                    finalweight=snowscale.countmode()
-                    finalfactoryid=wyuanrfid.returnvalue_factory
-                    finalserialid=wyuanrfid.returnvalue_serial
+        self.resize(650, 550)
+        self.center()
+
+        self.setWindowTitle('RFID Livestock')
+        self.show()
+        self.mystarttimer()
+
+    def center(self):
+
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
+
+    def sensorloop(self):
+        #finalweight=0
+        #finalfactoryid=0
+        #finalserialid=0
+        #while mainloop==1:
+        self.snowscale.loop()
+        #self.time_id=0
+        #self.time_id = self.startTimer(200)
+        self.wyuanrfid.clearbuffer()
+        if self.snowscale.returnvalue is not None:
+            if int(self.snowscale.returnvalue) >0:
+                self.snowscale.millislastread=self.snowscale.current_milli_time()
+                self.wyuanrfid.loop()
+                if self.wyuanrfid.returnvalue !='':
+                    self.finalweight=self.snowscale.countmode()
+                    self.finalfactoryid=self.wyuanrfid.returnvalue_factory
+                    self.finalserialid=self.wyuanrfid.returnvalue_serial
                     #record to 2d array
-        if snowscale.millislastread != 0:
-            if int(snowscale.current_milli_time())-int(snowscale.millislastread) >3000:
-                print("weight now is " +str(finalweight) + " and rfid factory is "+str(finalfactoryid)+",card serial ="+str(finalserialid))
-                snowscale.millislastread=0
-                finalweight=0
-                finalfactoryid=0
-                finalserialid=0
+                    requests.get("https://sf.redtone.com:2288/serverdata/central.php?thismodelname=rfid_livestock&thisdevicename=rfid_livestock&macaddress=isziziejack&weight=400&factory=1231a231&card=12313d1")
+        if self.snowscale.millislastread != 0:
+            if int(self.snowscale.current_milli_time())-int(self.snowscale.millislastread) >3000:
+                self.mongodatabase.insertvalue(str(self.finalfactoryid),str(self.finalserialid),str(self.finalweight))
+                #print("weight now is " +str(finalweight) + " and rfid factory is "+str(finalfactoryid)+",card serial ="+str(finalserialid))
+                self.wyuanrfid_latestid=self.wyuanrfid_latestid+"\nweight now is " +str(self.finalweight) + " and rfid factory is "+str(self.finalfactoryid)+",card serial ="+str(self.finalserialid)
+                self.rightarrayEdit.setText(str(self.wyuanrfid_latestid))
+                self.snowscale.millislastread=0
+                self.finalweight=0
+                self.finalfactoryid=0
+                self.finalserialid=0
+
+                    
+    def mystarttimer(self):
+        self.time_id = self.startTimer(300)
+    def timerEvent(self, QTimerEvent):
+        self.sensorloop()
         
+def main():
+    app = QApplication(sys.argv)
+    ex = livestock_data_desktop()
+    sys.exit(app.exec_())
+
+if __name__ == '__main__':
+    main()
 
 
-
-#/////-----   setup
-#snowscale=SensorWeight()
-#mainloop=1
-
-#/////-----   loop    
-#while mainloop==1:
-#    snowscale.loop()
-
-
-#/////-----   closing
-#snowscale.close()
-#wyuanrfid.close()
+#now = QDate.currentDate()
+#print(now.toString(Qt.ISODate))
+#print(now.toString(Qt.DefaultLocaleLongDate))
+#datetime = QDateTime.currentDateTime()
+#print(datetime.toString())
+#time = QTime.currentTime()
+#print(time.toString(Qt.DefaultLocaleLongDate))
