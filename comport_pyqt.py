@@ -21,16 +21,16 @@ class livestock_data_desktop(QWidget):
     wyuanrfid_array=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
     snowscale_latestweight=400
     snowscale_array = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
-    global wyuanrfid
-    global snowscale
+    #global wyuanrfid
+    #global snowscale
     
     def __init__(self):
         super().__init__()        
         self.initUI()
-        wyuanrfid=SensorRFID()
-        snowscale=SensorWeight()
-        wyuanrfid.serialport=serial.Serial('COM3',57600)
-        snowscale.serialport=serial.Serial('COM5',9600)
+        self.wyuanrfid=SensorRFID()
+        self.snowscale=SensorWeight()
+        self.wyuanrfid.serialport=serial.Serial('COM3',57600)
+        self.snowscale.serialport=serial.Serial('COM5',9600)
         self.mongodatabase=LivestockDb
     
     def initUI(self):
@@ -72,37 +72,36 @@ class livestock_data_desktop(QWidget):
         self.move(qr.topLeft())
 
     def sensorloop(self):
-        self.wyuanrfid_latestid=self.wyuanrfid_latestid+"spam"
-        self.rightarrayEdit.setText(str(self.wyuanrfid_latestid))
-        
         finalweight=0
         finalfactoryid=0
         finalserialid=0
-        while mainloop==1:
-            snowscale.loop()
-            wyuanrfid.clearbuffer()
-            if snowscale.returnvalue is not None:
-                if int(snowscale.returnvalue) >0:
-                    snowscale.millislastread=snowscale.current_milli_time()
-                    wyuanrfid.loop()
-                    if wyuanrfid.returnvalue !='':
-                        finalweight=snowscale.countmode()
-                        finalfactoryid=wyuanrfid.returnvalue_factory
-                        finalserialid=wyuanrfid.returnvalue_serial
-                        #record to 2d array
-            if snowscale.millislastread != 0:
-                if int(snowscale.current_milli_time())-int(snowscale.millislastread) >3000:
-                    #print("weight now is " +str(finalweight) + " and rfid factory is "+str(finalfactoryid)+",card serial ="+str(finalserialid))
-                    self.wyuanrfid_latestid=self.wyuanrfid_latestid+"weight now is " +str(finalweight) + " and rfid factory is "+str(finalfactoryid)+",card serial ="+str(finalserialid)
-                    self.rightarrayEdit.setText(str(self.wyuanrfid_latestid))
-                    snowscale.millislastread=0
-                    finalweight=0
-                    finalfactoryid=0
-                    finalserialid=0
+        #while mainloop==1:
+        self.snowscale.loop()
+        self.time_id=0
+        self.time_id = self.startTimer(200)
+        self.wyuanrfid.clearbuffer()
+        if self.snowscale.returnvalue is not None:
+            if int(self.snowscale.returnvalue) >0:
+                self.snowscale.millislastread=self.snowscale.current_milli_time()
+                self.wyuanrfid.loop()
+                if self.wyuanrfid.returnvalue !='':
+                    finalweight=self.snowscale.countmode()
+                    finalfactoryid=self.wyuanrfid.returnvalue_factory
+                    finalserialid=self.wyuanrfid.returnvalue_serial
+                    #record to 2d array
+        if self.snowscale.millislastread != 0:
+            if int(self.snowscale.current_milli_time())-int(self.snowscale.millislastread) >3000:
+                #print("weight now is " +str(finalweight) + " and rfid factory is "+str(finalfactoryid)+",card serial ="+str(finalserialid))
+                self.wyuanrfid_latestid=self.wyuanrfid_latestid+"weight now is " +str(finalweight) + " and rfid factory is "+str(finalfactoryid)+",card serial ="+str(finalserialid)
+                self.rightarrayEdit.setText(str(self.wyuanrfid_latestid))
+                self.snowscale.millislastread=0
+                finalweight=0
+                finalfactoryid=0
+                finalserialid=0
 
                     
     def mystarttimer(self):
-        self.time_id = self.startTimer(200)
+        self.time_id = self.startTimer(300)
     def timerEvent(self, QTimerEvent):
         self.sensorloop()
         
