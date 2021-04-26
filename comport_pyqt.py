@@ -1,19 +1,23 @@
 #26April2021
-#12.47pm
+#3.49pm
 
 import sys
 from PyQt5.Qt import *
 #iszizie find icon and add icon , https://zetcode.com/gui/pyqt5/firstprograms/
 
-import sys
 from PyQt5.QtWidgets import QWidget, QDesktopWidget, QApplication
 #from PyQt5.QtCore import Qt, QBasicTimer, pyqtSignal
 from PyQt5 import QtCore, QtGui, QtNetwork
+
+import datetime as dt
 
 
 from mongolink import *
 from comport_class_sensor import *
 import requests
+
+
+
 
 
 class livestock_data_desktop(QWidget):
@@ -23,6 +27,7 @@ class livestock_data_desktop(QWidget):
     snowscale_array = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
     #global wyuanrfid
     #global snowscale
+    device_id=1
     
     def __init__(self):
         super().__init__()        
@@ -94,14 +99,15 @@ class livestock_data_desktop(QWidget):
                     self.finalweight=self.snowscale.countmode()
                     self.finalfactoryid=self.wyuanrfid.returnvalue_factory
                     self.finalserialid=self.wyuanrfid.returnvalue_serial
+                    self.device_id=dt.datetime.now().hour
                     #record to 2d array
                     
         if self.snowscale.millislastread != 0:
             if int(self.snowscale.current_milli_time())-int(self.snowscale.millislastread) >3000:
-                self.mongodatabase.insertvalue(str(self.finalfactoryid),str(self.finalserialid),str(self.finalweight))
+                self.mongodatabase.insertvalue(str(self.finalfactoryid),str(self.finalserialid),self.finalweight,self.device_id)
                 #print("weight now is " +str(finalweight) + " and rfid factory is "+str(finalfactoryid)+",card serial ="+str(finalserialid))
                 requests.get("https://sf.redtone.com:2288/serverdata/central.php?thismodelname=rfid_livestock&thisdevicename=rfid_livestock&macaddress=isziziejack&weight="+str(self.finalweight)+"&factory="+str(self.finalfactoryid)+"&card="+str(self.finalserialid))
-                self.wyuanrfid_latestid=self.wyuanrfid_latestid+"\nweight now is " +str(self.finalweight) + " and rfid factory is "+str(self.finalfactoryid)+",card serial ="+str(self.finalserialid)
+                self.wyuanrfid_latestid=self.wyuanrfid_latestid+"\nweight now is " +str(self.finalweight) + " and rfid factory is "+str(self.finalfactoryid)+",card serial ="+str(self.finalserialid+",device_id="+str(self.device_id))
                 self.rightarrayEdit.setText(str(self.wyuanrfid_latestid))
                 self.snowscale.millislastread=0
                 self.finalweight=0
