@@ -1,5 +1,5 @@
-#23apr2021
-#4.35 pm
+#26apr2021
+#9.38 am
 
 
 import serial
@@ -230,15 +230,25 @@ snowscale=SensorWeight()
 wyuanrfid.serialport=serial.Serial('COM3',57600)
 snowscale.serialport=serial.Serial('COM5',9600)
 mainloop=1
+finalweight=0
+finalfactoryid=0
+finalserialid=0
 while mainloop==1:
     snowscale.loop()
     wyuanrfid.clearbuffer()
     if snowscale.returnvalue is not None:
         if int(snowscale.returnvalue) >0:
+            millislastread=self.current_milli_time()
             wyuanrfid.loop()
             if wyuanrfid.returnvalue !='':
-                print("weight now is " +str(snowscale.returnvalue) + " and rfid factory is "+str(wyuanrfid.returnvalue_factory)+",card serial ="+str(wyuanrfid.returnvalue_serial))
+                #print("weight now is " +str(snowscale.returnvalue) + " and rfid factory is "+str(wyuanrfid.returnvalue_factory)+",card serial ="+str(wyuanrfid.returnvalue_serial))
+                finalweight=snowscale.returnvalue
+                finalfactoryid=wyuanrfid.returnvalue_factory
+                finalserialid=wyuanrfid.returnvalue_serial
                 #record to 2d array
+    if int(self.current_milli_time())-int(self.millislastread) >2000:
+        print("weight now is " +str(finalweight) + " and rfid factory is "+str(finalfactoryid)+",card serial ="+str(finalserialid))
+        
 
 
 
