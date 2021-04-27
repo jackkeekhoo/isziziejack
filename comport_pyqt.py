@@ -40,6 +40,8 @@ class livestock_data_desktop(QWidget):
         self.finalweight=0
         self.finalfactoryid=0
         self.finalserialid=0
+        self.btnPress1 = QPushButton("Button 1")
+        self.btnPress1.clicked.connect(self.btnPress1_Clicked)
     
     def initUI(self):
         rightlabel=QLabel("Weighting Scale",self)
@@ -114,7 +116,10 @@ class livestock_data_desktop(QWidget):
                 self.finalweight=0
                 self.finalfactoryid=0
                 self.finalserialid=0
-
+    def btnPress1_Clicked(self):
+        #self.textEdit.setPlainText("Hello PyQt5!\nfrom pythonpyqt.com")
+        #self.wyuanrfid_latestid=self.wyuanrfid_latestid+"<tr><td>" +str(self.finalweight) + " </td><td>"+str(self.finalfactoryid)+"</td><td>"+str(self.finalserialid+",device_id="+str(self.device_id)+"</td></tr>")
+        self.rightarrayEdit.setHtml("Hello PyQt5!\nfrom pythonpyqt.com")
                     
     def mystarttimer(self):
         self.time_id = self.startTimer(300)
