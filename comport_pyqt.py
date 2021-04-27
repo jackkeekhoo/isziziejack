@@ -1,5 +1,5 @@
 #27April2021
-#10.33am
+#3.25pm
 
 import sys
 from PyQt5.Qt import *
@@ -134,7 +134,7 @@ class livestock_data_desktop(QWidget):
                 #print("weight now is " +str(finalweight) + " and rfid factory is "+str(finalfactoryid)+",card serial ="+str(finalserialid))
                 requests.get("https://sf.redtone.com:2288/serverdata/central.php?thismodelname=rfid_livestock&thisdevicename=rfid_livestock&macaddress=isziziejack&weight="+str(self.finalweight)+"&factory="+str(self.finalfactoryid)+"&card="+str(self.finalserialid)+"&device_id="+str(self.device_id)+"&dt="+str(self.dt))
                 #self.wyuanrfid_latestid=self.wyuanrfid_latestid+"\nweight now is " +str(self.finalweight) + " and rfid factory is "+str(self.finalfactoryid)+",card serial ="+str(self.finalserialid+",device_id="+str(self.device_id))
-                self.displaywindow_body="<tr><td>" +str(self.finalweight) + " </td><td>"+str(self.finalfactoryid)+"</td><td>"+str(self.finalserialid+",device_id="+str(self.device_id)+"</td><td>"+str(self.dt)+"</td></tr>"+self.wyuanrfid_latestid)
+                self.displaywindow_body="<tr><td>" +str(self.finalweight) + " </td><td>"+str(self.finalfactoryid)+"</td><td>"+str(self.finalserialid+",device_id="+str(self.device_id)+"</td><td>"+str(self.dt)+"</td></tr>"+self.displaywindow_body)
                 self.displaywindow.setHtml("<table border=2><tr><td>weight</td><td>factory ID</td><td>serial num</td><td>datetime</td>"+self.displaywindow_body+"<table>")
                 self.snowscale.millislastread=0
                 self.finalweight=0
