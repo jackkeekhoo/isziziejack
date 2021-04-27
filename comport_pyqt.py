@@ -1,5 +1,5 @@
-#26April2021
-#3.49pm
+#27April2021
+#10.33am
 
 import sys
 from PyQt5.Qt import *
@@ -21,7 +21,7 @@ import requests
 
 
 class livestock_data_desktop(QWidget):
-    wyuanrfid_latestid=""
+    wyuanrfid_latestid="<table border=3>"
     wyuanrfid_array=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
     snowscale_latestweight=400
     snowscale_array = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
@@ -106,9 +106,10 @@ class livestock_data_desktop(QWidget):
             if int(self.snowscale.current_milli_time())-int(self.snowscale.millislastread) >3000:
                 self.mongodatabase.insertvalue(str(self.finalfactoryid),str(self.finalserialid),self.finalweight,self.device_id)
                 #print("weight now is " +str(finalweight) + " and rfid factory is "+str(finalfactoryid)+",card serial ="+str(finalserialid))
-                requests.get("https://sf.redtone.com:2288/serverdata/central.php?thismodelname=rfid_livestock&thisdevicename=rfid_livestock&macaddress=isziziejack&weight="+str(self.finalweight)+"&factory="+str(self.finalfactoryid)+"&card="+str(self.finalserialid))
-                self.wyuanrfid_latestid=self.wyuanrfid_latestid+"\nweight now is " +str(self.finalweight) + " and rfid factory is "+str(self.finalfactoryid)+",card serial ="+str(self.finalserialid+",device_id="+str(self.device_id))
-                self.rightarrayEdit.setText(str(self.wyuanrfid_latestid))
+                requests.get("https://sf.redtone.com:2288/serverdata/central.php?thismodelname=rfid_livestock&thisdevicename=rfid_livestock&macaddress=isziziejack&weight="+str(self.finalweight)+"&factory="+str(self.finalfactoryid)+"&card="+str(self.finalserialid)+"&device_id="+str(self.device_id))
+                #self.wyuanrfid_latestid=self.wyuanrfid_latestid+"\nweight now is " +str(self.finalweight) + " and rfid factory is "+str(self.finalfactoryid)+",card serial ="+str(self.finalserialid+",device_id="+str(self.device_id))
+                self.wyuanrfid_latestid=self.wyuanrfid_latestid+"<tr><td>" +str(self.finalweight) + " </td><td>"+str(self.finalfactoryid)+"</td><td>"+str(self.finalserialid+",device_id="+str(self.device_id)+"</td></tr>")
+                self.rightarrayEdit.setHtml(str(self.wyuanrfid_latestid))
                 self.snowscale.millislastread=0
                 self.finalweight=0
                 self.finalfactoryid=0
