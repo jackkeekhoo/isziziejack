@@ -5,9 +5,11 @@ import sys
 from PyQt5.Qt import *
 #iszizie find icon and add icon , https://zetcode.com/gui/pyqt5/firstprograms/
 
-from PyQt5.QtWidgets import QWidget, QDesktopWidget, QApplication
-#from PyQt5.QtCore import Qt, QBasicTimer, pyqtSignal
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
 from PyQt5 import QtCore, QtGui, QtNetwork
+from PyQt5.QtGui import QIcon
+#import qrc_resources
 
 import datetime as dt
 
@@ -22,6 +24,7 @@ import requests
 
 class livestock_data_desktop(QWidget):
     wyuanrfid_latestid=""
+    displaywindow_body=""
     wyuanrfid_array=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
     snowscale_latestweight=400
     snowscale_array = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
@@ -40,6 +43,7 @@ class livestock_data_desktop(QWidget):
         self.finalweight=0
         self.finalfactoryid=0
         self.finalserialid=0
+
         
         
     
@@ -47,35 +51,48 @@ class livestock_data_desktop(QWidget):
         rightlabel=QLabel("Weighting Scale",self)
         rightresult=QLabel(str(self.snowscale_latestweight),self)
         rightarray=QLabel("previous 20")
-        self.rightarrayEdit = QTextEdit()
+        self.displaywindow = QTextEdit()
         
-        leftlabel=QLabel("RFID Reader",self)
-        leftresult=QLabel(self.wyuanrfid_latestid,self)
-        leftarray=QLabel("previous 20")
-        self.leftarrayEdit = QTextEdit()
-
         grid = QGridLayout()
         grid.setSpacing(10)
         grid.addWidget(rightlabel, 1, 1)#iszizit please change all these widget position
         grid.addWidget(rightresult, 2, 1)
         grid.addWidget(rightarray, 3, 1)
-        grid.addWidget(self.rightarrayEdit, 4, 1, 5, 1)
+        grid.addWidget(self.displaywindow, 4, 1, 5, 1)
         
-        self.btnPress1 = QPushButton("Grass area 1")
-        self.btnPress1.clicked.connect(self.btnPress1_Clicked)
-        grid.addWidget(self.btnPress1,1,0)
-        self.btnPress2 = QPushButton("Grass area 2")
-        self.btnPress2.clicked.connect(self.btnPress1_Clicked)
-        grid.addWidget(self.btnPress2,2,0)
-        self.btnPress3 = QPushButton("Grass area 3")
-        self.btnPress3.clicked.connect(self.btnPress1_Clicked)
-        grid.addWidget(self.btnPress3,3,0)
+        self.btn_checklivereading = QPushButton("Check Live Reading")
+        self.btn_checklivereading.clicked.connect(self.btn_checklivereading_clicked)
+        grid.addWidget(self.btn_checklivereading,1,0)
+        self.btn_grassarea1 = QPushButton("Grass area 1")
+        self.btn_grassarea1.clicked.connect(self.btn_grassarea1_clicked)
+        grid.addWidget(self.btn_grassarea1,2,0)
+        self.btn_grassarea2 = QPushButton("Grass area 2")
+        self.btn_grassarea2.clicked.connect(self.btn_grassarea2_clicked)
+        grid.addWidget(self.btn_grassarea2,3,0)
+        self.btn_grassarea3 = QPushButton("Grass area 3")
+        self.btn_grassarea3.clicked.connect(self.btn_grassarea3_clicked)
+        grid.addWidget(self.btn_grassarea3,4,0)
 
+        self.menubar = QMenuBar()
+        grid.addWidget(self.menubar,0,0)
+        self.actionFile = self.menubar.addMenu("File")
+        self.actionFile.addAction("New")
+        self.actionFile.addAction("Open")
+        self.actionFile.addAction("Save")
+        self.actionFile.addSeparator()
+        self.actionFile.addAction("Quit")
+        self.menubar.addMenu("Edit")
+        self.menubar.addMenu("View")
+        self.menubar.addMenu("Help")
+        
+        
+        
         self.setLayout(grid)
         self.resize(750, 650)
         self.center()
 
         self.setWindowTitle('RFID Livestock')
+        self.setWindowIcon(QtGui.QIcon('cow.png'))
         self.show()
         self.mystarttimer()
 
@@ -108,25 +125,39 @@ class livestock_data_desktop(QWidget):
                     self.finalfactoryid=self.wyuanrfid.returnvalue_factory
                     self.finalserialid=self.wyuanrfid.returnvalue_serial
                     self.device_id=dt.datetime.now().hour
+                    self.dt=dt.datetime.now
                     #record to 2d array
                     
         if self.snowscale.millislastread != 0:
             if int(self.snowscale.current_milli_time())-int(self.snowscale.millislastread) >3000:
-                self.device_id=10
-                self.mongodatabase.insertvalue(str(self.finalfactoryid),str(self.finalserialid),self.finalweight,self.device_id)
+                self.mongodatabase.insertvalue(str(self.finalfactoryid),str(self.finalserialid),self.finalweight,self.device_id,self.dt)
                 #print("weight now is " +str(finalweight) + " and rfid factory is "+str(finalfactoryid)+",card serial ="+str(finalserialid))
-                requests.get("https://sf.redtone.com:2288/serverdata/central.php?thismodelname=rfid_livestock&thisdevicename=rfid_livestock&macaddress=isziziejack&weight="+str(self.finalweight)+"&factory="+str(self.finalfactoryid)+"&card="+str(self.finalserialid)+"&device_id="+str(self.device_id))
+                requests.get("https://sf.redtone.com:2288/serverdata/central.php?thismodelname=rfid_livestock&thisdevicename=rfid_livestock&macaddress=isziziejack&weight="+str(self.finalweight)+"&factory="+str(self.finalfactoryid)+"&card="+str(self.finalserialid)+"&device_id="+str(self.device_id)+"&dt="+str(self.dt))
                 #self.wyuanrfid_latestid=self.wyuanrfid_latestid+"\nweight now is " +str(self.finalweight) + " and rfid factory is "+str(self.finalfactoryid)+",card serial ="+str(self.finalserialid+",device_id="+str(self.device_id))
-                self.wyuanrfid_latestid="<tr><td>" +str(self.finalweight) + " </td><td>"+str(self.finalfactoryid)+"</td><td>"+str(self.finalserialid+",device_id="+str(self.device_id)+"</td></tr>"+self.wyuanrfid_latestid)
-                self.rightarrayEdit.setHtml("<table border=2>"+self.wyuanrfid_latestid+"<table>")
+                self.displaywindow_body="<tr><td>" +str(self.finalweight) + " </td><td>"+str(self.finalfactoryid)+"</td><td>"+str(self.finalserialid+",device_id="+str(self.device_id)+"</td><td>"+str(self.dt)+"</td></tr>"+self.wyuanrfid_latestid)
+                self.displaywindow.setHtml("<table border=2><tr><td>weight</td><td>factory ID</td><td>serial num</td><td>datetime</td>"+self.displaywindow_body+"<table>")
                 self.snowscale.millislastread=0
                 self.finalweight=0
                 self.finalfactoryid=0
                 self.finalserialid=0
-    def btnPress1_Clicked(self):
+
+    def btn_checklivereading_clicked(self):
         #self.textEdit.setPlainText("Hello PyQt5!\nfrom pythonpyqt.com")
         #self.wyuanrfid_latestid=self.wyuanrfid_latestid+"<tr><td>" +str(self.finalweight) + " </td><td>"+str(self.finalfactoryid)+"</td><td>"+str(self.finalserialid+",device_id="+str(self.device_id)+"</td></tr>")
-        self.rightarrayEdit.setHtml("Hello PyQt5!\nfrom pythonpyqt.com")
+        self.displaywindow.setHtml("Hello PyQt5!\nfrom pythonpyqt.com")
+    def btn_grassarea1_clicked(self):
+        #self.textEdit.setPlainText("Hello PyQt5!\nfrom pythonpyqt.com")
+        #self.wyuanrfid_latestid=self.wyuanrfid_latestid+"<tr><td>" +str(self.finalweight) + " </td><td>"+str(self.finalfactoryid)+"</td><td>"+str(self.finalserialid+",device_id="+str(self.device_id)+"</td></tr>")
+        self.displaywindow.setHtml("Hello PyQt5!\nfrom pythonpyqt.com")
+    def btn_grassarea2_clicked(self):
+        #self.textEdit.setPlainText("Hello PyQt5!\nfrom pythonpyqt.com")
+        #self.wyuanrfid_latestid=self.wyuanrfid_latestid+"<tr><td>" +str(self.finalweight) + " </td><td>"+str(self.finalfactoryid)+"</td><td>"+str(self.finalserialid+",device_id="+str(self.device_id)+"</td></tr>")
+        self.displaywindow.setHtml("Hello PyQt5!\nfrom pythonpyqt.com")
+    def btn_grassarea3_clicked(self):
+        #self.textEdit.setPlainText("Hello PyQt5!\nfrom pythonpyqt.com")
+        #self.wyuanrfid_latestid=self.wyuanrfid_latestid+"<tr><td>" +str(self.finalweight) + " </td><td>"+str(self.finalfactoryid)+"</td><td>"+str(self.finalserialid+",device_id="+str(self.device_id)+"</td></tr>")
+        self.displaywindow.setHtml("Hello PyQt5!\nfrom pythonpyqt.com")
+        
                     
     def mystarttimer(self):
         self.time_id = self.startTimer(300)
