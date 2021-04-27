@@ -100,6 +100,7 @@ class livestock_data_desktop(QWidget):
             k=0
         if self.snowscale.returnvalue is not None:
             if int(self.snowscale.returnvalue) >0:
+                print(self.snowscale.countmode())
                 self.snowscale.millislastread=self.snowscale.current_milli_time()
                 self.wyuanrfid.loop()
                 if self.wyuanrfid.returnvalue !='':
@@ -111,12 +112,13 @@ class livestock_data_desktop(QWidget):
                     
         if self.snowscale.millislastread != 0:
             if int(self.snowscale.current_milli_time())-int(self.snowscale.millislastread) >3000:
+                self.device_id=10
                 self.mongodatabase.insertvalue(str(self.finalfactoryid),str(self.finalserialid),self.finalweight,self.device_id)
                 #print("weight now is " +str(finalweight) + " and rfid factory is "+str(finalfactoryid)+",card serial ="+str(finalserialid))
                 requests.get("https://sf.redtone.com:2288/serverdata/central.php?thismodelname=rfid_livestock&thisdevicename=rfid_livestock&macaddress=isziziejack&weight="+str(self.finalweight)+"&factory="+str(self.finalfactoryid)+"&card="+str(self.finalserialid)+"&device_id="+str(self.device_id))
                 #self.wyuanrfid_latestid=self.wyuanrfid_latestid+"\nweight now is " +str(self.finalweight) + " and rfid factory is "+str(self.finalfactoryid)+",card serial ="+str(self.finalserialid+",device_id="+str(self.device_id))
-                self.wyuanrfid_latestid="<table border=2>"+"<tr><td>" +str(self.finalweight) + " </td><td>"+str(self.finalfactoryid)+"</td><td>"+str(self.finalserialid+",device_id="+str(self.device_id)+"</td></tr>"+self.wyuanrfid_latestid)
-                self.rightarrayEdit.setHtml(str(self.wyuanrfid_latestid))
+                self.wyuanrfid_latestid="<tr><td>" +str(self.finalweight) + " </td><td>"+str(self.finalfactoryid)+"</td><td>"+str(self.finalserialid+",device_id="+str(self.device_id)+"</td></tr>"+self.wyuanrfid_latestid)
+                self.rightarrayEdit.setHtml("<table border=2>"+self.wyuanrfid_latestid+"<table>")
                 self.snowscale.millislastread=0
                 self.finalweight=0
                 self.finalfactoryid=0
