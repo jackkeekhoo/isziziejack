@@ -6,6 +6,7 @@ import csv
 import sys
 import datetime
 
+print ("ttttttttttttttttttttttttttttt")
 class LivestockDb:
     myclient=''
     mydb=''
@@ -16,7 +17,7 @@ class LivestockDb:
         self.mydb = self.myclient["project"]
         self.mytable = self.mydb["rfid_livestock"]
         self.tablefieldname=['_id', 'factory id', 'serial number', 'weight','gate id']
-        print("connected")
+        print("connected to db")
         #print(self.myclient.list_database_names())
         return()
     def insertvalue(self,factory_id, serial_number, weight, gate_id):
@@ -24,14 +25,13 @@ class LivestockDb:
         mydict = { "factory id": factory_id, "serial number": serial_number, "weight": weight , "gate id": gate_id}
         x = self.mytable.insert_one(mydict)
         return(x)
-    def exportdata():
-        
-        ###Todo : need to change the file name , user set
-        
+    
+    def exportdata(newfilename,newlist):        
         import pandas as pd
-        mydoc = self.mytable.find()
-        df = pd.DataFrame(mydoc, columns= self.tablefieldname)
-        df.to_csv (r'C:\Users\iszizie.idzham\Desktop\python files\rfid.csv', index = False, header=True)
+        #newlist = self.mytable.find()
+        df = pd.DataFrame(newlist, columns= self.tablefieldname)
+        df.to_csv (r'C:\Users\iszizie.idzham\Desktop\python files\\'+newfilename+'.csv', index = False, header=True)
+                   
     def search_cow_by_factory_serial(self,factory_id,serial_number):
         self.connectmongo()
         #myquery={"factory id": "1100ee00e20043b0cc8587" ,"serial number": "09eccd21b0ee35"}
@@ -41,7 +41,7 @@ class LivestockDb:
           print(x)
         #myquery={"factory id": factory_id, "serial number": serial_number}
         #return(mongodatabase.mytable.find(myquery))
-    def search_cow_by_weight(self,minimum_weight,maximum_weight)
+    def search_cow_by_weight(self,minimum_weight,maximum_weight):
     
         #iszizie, don't let it count same cow twice
     
@@ -49,18 +49,33 @@ class LivestockDb:
         mydoc=mongodatabase.mytable.find(myquery)
         for x in mydoc:
           print(x)
+    #### total difference number of cow that pass by gate id 
+    def list_all_cow_in_grassarea3(gateid_in,gateid_out)
+        mydoc = mongodatabase.mytable.distinct("serial number",{"gate id":gateid_in})
+
+        for x in mydoc:
+          print(x)
+        totalx = len(mydoc)
+        
+        mydoc = mongodatabase.mytable.distinct("serial number",{"gate id":gateid_out})
+
+        for x in mydoc:
+          print(x)
+        totaly = len(mydoc)
+        print("Total cow at the grassarea3=",(totalx-totaly))
         
 
-    #mongodatabase=LivestockDb()      
-    #mongodatabase.connectmongo()
-#print(ObjectId("60863591655e02a510c4966d").getTimestamp())
-    #mongodatabase.mytable.insert({ 'created_on' : new Date() })
 
-    #d = datetime.datetime.strptime("2017-10-13T10:53:53.000Z", "%Y-%m-%dT%H:%M:%S.000Z")
+    def convert_list_to_htmltable(longlist):
+        #### to print list/array  to html table format
+        longstring="<tr>"
+        for x in longlist:
+            for key, value in x.items():
+                longstring=longstring+"<td>"+ str(x[key])+"</td>"
+        longstring=longstring+"</tr>"
+        #print(longstring)
+        return(longstring)
 
-    #with MongoClient() as mongo:
-        #db = mongo.get_database("test")
-        #db['dates'].insert({"date" : d})
 
 #testing
 dfgfghghjghhjg=0
@@ -85,6 +100,32 @@ if findcowbygate==1:
     mydoc=mongodatabase.mytable.find(myquery)
     for x in mydoc:
       print(x)
+
+
+
+
+###### table for cow nicknames and remarks
+##mongodatabase=LivestockDb()      
+##mongodatabase.connectmongo()
+##factory_id = "1100"
+##serial_number = "2938"
+##cow_nickname= "cow1"
+##cow_remarks= "muscular, just vaccinated"
+##
+##mydict = { "factory id": factory_id, "serial number": serial_number, "cow nickname": cow_nickname, "cow remarks":cow_remarks}
+##x = mongodatabase.mytablecow.insert_one(mydict)
+##
+##
+##
+###### table for gate id and location remarks
+##mongodatabase=LivestockDb()      
+##mongodatabase.connectmongo()
+##gate_id=9
+##location_remarks= "pantry sofa"
+##mydict = { "gate id": gate_id, "location remarks":location_remarks}
+##x = mongodatabase.mytablelocation.insert_one(mydict)
+
+
 
 
   
